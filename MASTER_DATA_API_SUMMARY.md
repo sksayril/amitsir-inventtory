@@ -1,200 +1,328 @@
-# Master Data API Summary
+# Master Data API Documentation
 
 ## Overview
-This document summarizes all the master data models and APIs created for the comprehensive business management system.
+This document provides comprehensive API documentation for the Master Data Management System, including all endpoints, request/response formats, and usage examples.
 
-## Models Created
+## Base URL
+```
+http://localhost:3000
+```
 
-### 1. Debit Party Master (`models/debitParty.model.js`)
-**Fields:**
-- `partyName` (required, unique)
-- `partyAddress1` (required)
-- `partyAddress2` (optional)
-- `partyAddress3` (optional)
-- `pinCode` (required, 6-digit validation)
-- `gstNo` (optional, GST format validation)
-- `panNo` (optional, PAN format validation)
-- `iecNo` (optional)
-- `epcgLicNo` (object with lic1, lic2, lic3)
-- `epcgLicDate` (Date)
-- `epcgLicExpiryReminder` (Date)
-- `isActive` (Boolean, default: true)
-- `createdBy`, `updatedBy` (User references)
-- `timestamps` (createdAt, updatedAt)
-- `strict: false` (allows additional custom fields)
+## Authentication
+All API endpoints (except authentication) require a valid JWT token in the Authorization header:
+```
+Authorization: Bearer <your_jwt_token>
+```
 
-### 2. Item Master (`models/item.model.js`)
-**Fields:**
-- `itemName` (required, unique)
-- `itemHsn` (required)
-- `itemQty` (required, number)
-- `itemUnits` (required, enum: mtr, sqm, kg, pcs, ltr, box, carton, dozen, pair, set, unit)
-- `itemRate` (object with inr, usd)
-- `remarks` (optional)
-- `isActive` (Boolean, default: true)
-- `createdBy`, `updatedBy` (User references)
-- `timestamps` (createdAt, updatedAt)
-- `strict: false` (allows additional custom fields)
+---
 
-### 3. Credit Party Master (`models/creditParty.model.js`)
-**Fields:**
-- `partyName` (required, unique)
-- `partyAddress1` (required)
-- `partyAddress2` (optional)
-- `partyAddress3` (optional)
-- `pinCode` (required, 6-digit validation)
-- `country` (required)
-- `port` (required)
-- `isActive` (Boolean, default: true)
-- `createdBy`, `updatedBy` (User references)
-- `timestamps` (createdAt, updatedAt)
-- `strict: false` (allows additional custom fields)
+## 1. Authentication APIs
 
-### 4. Broker Master (`models/broker.model.js`)
-**Fields:**
-- `brokerName` (required, unique)
-- `isActive` (Boolean, default: true)
-- `createdBy`, `updatedBy` (User references)
-- `timestamps` (createdAt, updatedAt)
-- `strict: false` (allows additional custom fields)
+### 1.1 User Registration
+**POST** `/auth/signup`
 
-### 5. CHA Master (`models/cha.model.js`)
-**Fields:**
-- `chaName` (required, unique)
-- `isActive` (Boolean, default: true)
-- `createdBy`, `updatedBy` (User references)
-- `timestamps` (createdAt, updatedAt)
-- `strict: false` (allows additional custom fields)
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "securepassword123"
+}
+```
 
-### 6. Sales Transaction (`models/salesTransaction.model.js`)
-**Fields:**
-- `transactionNumber` (required, unique)
-- `transactionDate` (required, default: now)
-- `debitParty` (required, reference to DebitParty)
-- `creditParty` (required, reference to CreditParty)
-- `items` (array of items with quantity, rate, amount)
-- `totalAmount` (required, number)
-- `currency` (enum: INR, USD, EUR, GBP)
-- `broker` (optional, reference to Broker)
-- `cha` (optional, reference to CHA)
-- `status` (enum: draft, pending, approved, completed, cancelled)
-- `remarks` (optional)
-- `isActive` (Boolean, default: true)
-- `createdBy`, `updatedBy` (User references)
-- `timestamps` (createdAt, updatedAt)
-- `strict: false` (allows additional custom fields)
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
 
-### 7. Purchase Transaction (`models/purchaseTransaction.model.js`)
-**Fields:** (Same structure as Sales Transaction)
+### 1.2 User Login
+**POST** `/auth/login`
 
-### 8. Receipt Transaction (`models/receiptTransaction.model.js`)
-**Fields:**
-- `transactionNumber` (required, unique)
-- `transactionDate` (required, default: now)
-- `party` (required, reference to DebitParty)
-- `partyType` (enum: debit, credit)
-- `amount` (required, number)
-- `currency` (enum: INR, USD, EUR, GBP)
-- `paymentMode` (enum: cash, cheque, bank_transfer, online, card)
-- `referenceNumber` (optional)
-- `bankDetails` (object with bankName, accountNumber, ifscCode)
-- `status` (enum: pending, completed, failed, cancelled)
-- `remarks` (optional)
-- `isActive` (Boolean, default: true)
-- `createdBy`, `updatedBy` (User references)
-- `timestamps` (createdAt, updatedAt)
-- `strict: false` (allows additional custom fields)
+**Request Body:**
+```json
+{
+  "email": "john.doe@example.com",
+  "password": "securepassword123"
+}
+```
 
-## API Endpoints Created
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
 
-### Debit Party APIs (`/debit-parties`)
-- `POST /debit-parties` - Create debit party
-- `GET /debit-parties` - Get all debit parties (with pagination, search, filtering)
-- `GET /debit-parties/:id` - Get debit party by ID
-- `PUT /debit-parties/:id` - Update debit party
-- `DELETE /debit-parties/:id` - Delete debit party
-- `GET /debit-parties/search/name/:partyName` - Search by party name
-- `GET /debit-parties/search/gst/:gstNo` - Search by GST number
+---
 
-### Master Data APIs (`/master-data`)
+## 2. Debit Party Master APIs
 
-#### Items (`/master-data/items`)
-- `POST /master-data/items` - Create item
-- `GET /master-data/items` - Get all items (with pagination, search, filtering)
-- `GET /master-data/items/:id` - Get item by ID
-- `PUT /master-data/items/:id` - Update item
-- `DELETE /master-data/items/:id` - Delete item
+### 2.1 Create Debit Party
+**POST** `/debit-parties`
 
-#### Credit Parties (`/master-data/credit-parties`)
-- `POST /master-data/credit-parties` - Create credit party
-- `GET /master-data/credit-parties` - Get all credit parties (with pagination, search, filtering)
-- `GET /master-data/credit-parties/:id` - Get credit party by ID
-- `PUT /master-data/credit-parties/:id` - Update credit party
-- `DELETE /master-data/credit-parties/:id` - Delete credit party
-
-#### Brokers (`/master-data/brokers`)
-- `POST /master-data/brokers` - Create broker
-- `GET /master-data/brokers` - Get all brokers (with pagination, search, filtering)
-- `GET /master-data/brokers/:id` - Get broker by ID
-- `PUT /master-data/brokers/:id` - Update broker
-- `DELETE /master-data/brokers/:id` - Delete broker
-
-#### CHAs (`/master-data/chas`)
-- `POST /master-data/chas` - Create CHA
-- `GET /master-data/chas` - Get all CHAs (with pagination, search, filtering)
-- `GET /master-data/chas/:id` - Get CHA by ID
-- `PUT /master-data/chas/:id` - Update CHA
-- `DELETE /master-data/chas/:id` - Delete CHA
-
-## Key Features
-
-### 1. Flexible Schema Design
-- All models use `strict: false` to allow additional custom fields
-- Users can add their own schema keys without modifying the base models
-
-### 2. Comprehensive Validation
-- Mongoose validation for all required fields
-- Format validation for GST, PAN, PIN codes
-- Enum validation for status fields and units
-- Unique constraints where needed
-
-### 3. Search and Filtering
-- Full-text search across relevant fields
-- Pagination support
-- Active/inactive filtering
-- Date range filtering for transactions
-
-### 4. Audit Trail
-- All models track who created and updated records
-- Timestamps for creation and updates
-- User references for accountability
-
-### 5. Relationship Management
-- Proper references between models
-- Population of related data
-- Cascade considerations for deletions
-
-### 6. Error Handling
-- Comprehensive validation error handling
-- Duplicate key error handling
-- Proper HTTP status codes
-- User-friendly error messages
-
-## Usage Examples
-
-### Creating a Debit Party with Custom Fields
+**Request Body:**
 ```json
 {
   "partyName": "ABC Trading Co",
   "partyAddress1": "123 Main Street",
+  "partyAddress2": "Suite 100",
+  "partyAddress3": "Business District",
   "pinCode": "400001",
   "gstNo": "27ABCDE1234F1Z5",
-  "customField1": "Custom Value 1",
-  "customField2": "Custom Value 2"
+  "panNo": "ABCDE1234F",
+  "iecNo": "IEC123456",
+  "epcgLicNo": {
+    "lic1": "LIC001",
+    "lic2": "LIC002",
+    "lic3": "LIC003"
+  },
+  "epcgLicDate": "2024-01-01",
+  "epcgLicExpiryReminder": "2025-01-01",
+  "customField1": "Custom Value 1"
 }
 ```
 
-### Creating an Item with Rates
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Debit party created successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "partyName": "ABC Trading Co",
+    "partyAddress1": "123 Main Street",
+    "partyAddress2": "Suite 100",
+    "partyAddress3": "Business District",
+    "pinCode": "400001",
+    "gstNo": "27ABCDE1234F1Z5",
+    "panNo": "ABCDE1234F",
+    "iecNo": "IEC123456",
+    "epcgLicNo": {
+      "lic1": "LIC001",
+      "lic2": "LIC002",
+      "lic3": "LIC003"
+    },
+    "epcgLicDate": "2024-01-01T00:00:00.000Z",
+    "epcgLicExpiryReminder": "2025-01-01T00:00:00.000Z",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "customField1": "Custom Value 1"
+  }
+}
+```
+
+### 2.2 Get All Debit Parties
+**GET** `/debit-parties?page=1&limit=10&search=ABC&isActive=true`
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
+- `search` (optional): Search in partyName, gstNo, panNo, iecNo
+- `isActive` (optional): Filter by active status (true/false)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+      "partyName": "ABC Trading Co",
+      "partyAddress1": "123 Main Street",
+      "pinCode": "400001",
+      "gstNo": "27ABCDE1234F1Z5",
+      "isActive": true,
+      "createdBy": {
+        "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+        "name": "John Doe",
+        "email": "john.doe@example.com"
+      },
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 1,
+    "totalItems": 1,
+    "itemsPerPage": 10
+  }
+}
+```
+
+### 2.3 Get Debit Party by ID
+**GET** `/debit-parties/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "partyName": "ABC Trading Co",
+    "partyAddress1": "123 Main Street",
+    "partyAddress2": "Suite 100",
+    "partyAddress3": "Business District",
+    "pinCode": "400001",
+    "gstNo": "27ABCDE1234F1Z5",
+    "panNo": "ABCDE1234F",
+    "iecNo": "IEC123456",
+    "epcgLicNo": {
+      "lic1": "LIC001",
+      "lic2": "LIC002",
+      "lic3": "LIC003"
+    },
+    "epcgLicDate": "2024-01-01T00:00:00.000Z",
+    "epcgLicExpiryReminder": "2025-01-01T00:00:00.000Z",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### 2.4 Update Debit Party
+**PUT** `/debit-parties/:id`
+
+**Request Body:**
+```json
+{
+  "partyName": "ABC Trading Co Updated",
+  "partyAddress1": "456 New Street",
+  "isActive": false
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Debit party updated successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "partyName": "ABC Trading Co Updated",
+    "partyAddress1": "456 New Street",
+    "partyAddress2": "Suite 100",
+    "partyAddress3": "Business District",
+    "pinCode": "400001",
+    "gstNo": "27ABCDE1234F1Z5",
+    "panNo": "ABCDE1234F",
+    "iecNo": "IEC123456",
+    "epcgLicNo": {
+      "lic1": "LIC001",
+      "lic2": "LIC002",
+      "lic3": "LIC003"
+    },
+    "epcgLicDate": "2024-01-01T00:00:00.000Z",
+    "epcgLicExpiryReminder": "2025-01-01T00:00:00.000Z",
+    "isActive": false,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T11:00:00.000Z"
+  }
+}
+```
+
+### 2.5 Delete Debit Party
+**DELETE** `/debit-parties/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Debit party deleted successfully"
+}
+```
+
+### 2.6 Search Debit Party by Name
+**GET** `/debit-parties/search/name/:partyName`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+      "partyName": "ABC Trading Co",
+      "partyAddress1": "123 Main Street",
+      "pinCode": "400001",
+      "isActive": true
+    }
+  ]
+}
+```
+
+### 2.7 Search Debit Party by GST Number
+**GET** `/debit-parties/search/gst/:gstNo`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "partyName": "ABC Trading Co",
+    "gstNo": "27ABCDE1234F1Z5",
+    "isActive": true
+  }
+}
+```
+
+---
+
+## 3. Item Master APIs
+
+### 3.1 Create Item
+**POST** `/master-data/items`
+
+**Request Body:**
 ```json
 {
   "itemName": "Cotton Fabric",
@@ -205,42 +333,883 @@ This document summarizes all the master data models and APIs created for the com
     "inr": 150,
     "usd": 2.5
   },
-  "remarks": "Premium quality cotton"
+  "remarks": "Premium quality cotton fabric",
+  "customField1": "Custom Value 1"
 }
 ```
 
-### Creating a Sales Transaction
+**Response (201 Created):**
 ```json
 {
-  "transactionNumber": "SALES001",
-  "debitParty": "debitPartyId",
-  "creditParty": "creditPartyId",
-  "items": [
-    {
-      "item": "itemId",
-      "quantity": 10,
-      "rate": 150,
-      "amount": 1500
-    }
-  ],
-  "totalAmount": 1500,
-  "currency": "INR",
-  "broker": "brokerId",
-  "cha": "chaId"
+  "success": true,
+  "message": "Item created successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "itemName": "Cotton Fabric",
+    "itemHsn": "5208",
+    "itemQty": 100,
+    "itemUnits": "sqm",
+    "itemRate": {
+      "inr": 150,
+      "usd": 2.5
+    },
+    "remarks": "Premium quality cotton fabric",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "customField1": "Custom Value 1"
+  }
 }
 ```
 
-## Security Features
-- All endpoints require authentication
-- JWT token validation
+### 3.2 Get All Items
+**GET** `/master-data/items?page=1&limit=10&search=cotton&isActive=true`
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
+- `search` (optional): Search in itemName, itemHsn
+- `isActive` (optional): Filter by active status (true/false)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d2",
+      "itemName": "Cotton Fabric",
+      "itemHsn": "5208",
+      "itemQty": 100,
+      "itemUnits": "sqm",
+      "itemRate": {
+        "inr": 150,
+        "usd": 2.5
+      },
+      "isActive": true,
+      "createdBy": {
+        "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+        "name": "John Doe",
+        "email": "john.doe@example.com"
+      },
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 1,
+    "totalItems": 1,
+    "itemsPerPage": 10
+  }
+}
+```
+
+### 3.3 Get Item by ID
+**GET** `/master-data/items/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "itemName": "Cotton Fabric",
+    "itemHsn": "5208",
+    "itemQty": 100,
+    "itemUnits": "sqm",
+    "itemRate": {
+      "inr": 150,
+      "usd": 2.5
+    },
+    "remarks": "Premium quality cotton fabric",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### 3.4 Update Item
+**PUT** `/master-data/items/:id`
+
+**Request Body:**
+```json
+{
+  "itemName": "Premium Cotton Fabric",
+  "itemQty": 150,
+  "itemRate": {
+    "inr": 180,
+    "usd": 3.0
+  }
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Item updated successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "itemName": "Premium Cotton Fabric",
+    "itemHsn": "5208",
+    "itemQty": 150,
+    "itemUnits": "sqm",
+    "itemRate": {
+      "inr": 180,
+      "usd": 3.0
+    },
+    "remarks": "Premium quality cotton fabric",
+    "isActive": true,
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedAt": "2024-01-15T11:00:00.000Z"
+  }
+}
+```
+
+### 3.5 Delete Item
+**DELETE** `/master-data/items/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Item deleted successfully"
+}
+```
+
+---
+
+## 4. Credit Party Master APIs
+
+### 4.1 Create Credit Party
+**POST** `/master-data/credit-parties`
+
+**Request Body:**
+```json
+{
+  "partyName": "XYZ International Ltd",
+  "partyAddress1": "456 Export Street",
+  "partyAddress2": "Floor 5",
+  "partyAddress3": "Export Zone",
+  "pinCode": "500001",
+  "country": "United States",
+  "port": "New York",
+  "customField1": "Custom Value 1"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Credit party created successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d3",
+    "partyName": "XYZ International Ltd",
+    "partyAddress1": "456 Export Street",
+    "partyAddress2": "Floor 5",
+    "partyAddress3": "Export Zone",
+    "pinCode": "500001",
+    "country": "United States",
+    "port": "New York",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "customField1": "Custom Value 1"
+  }
+}
+```
+
+### 4.2 Get All Credit Parties
+**GET** `/master-data/credit-parties?page=1&limit=10&search=XYZ&isActive=true`
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
+- `search` (optional): Search in partyName, country, port
+- `isActive` (optional): Filter by active status (true/false)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d3",
+      "partyName": "XYZ International Ltd",
+      "partyAddress1": "456 Export Street",
+      "country": "United States",
+      "port": "New York",
+      "isActive": true,
+      "createdBy": {
+        "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+        "name": "John Doe",
+        "email": "john.doe@example.com"
+      },
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 1,
+    "totalItems": 1,
+    "itemsPerPage": 10
+  }
+}
+```
+
+### 4.3 Get Credit Party by ID
+**GET** `/master-data/credit-parties/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d3",
+    "partyName": "XYZ International Ltd",
+    "partyAddress1": "456 Export Street",
+    "partyAddress2": "Floor 5",
+    "partyAddress3": "Export Zone",
+    "pinCode": "500001",
+    "country": "United States",
+    "port": "New York",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### 4.4 Update Credit Party
+**PUT** `/master-data/credit-parties/:id`
+
+**Request Body:**
+```json
+{
+  "partyName": "XYZ International Ltd Updated",
+  "country": "Canada",
+  "port": "Toronto"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Credit party updated successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d3",
+    "partyName": "XYZ International Ltd Updated",
+    "partyAddress1": "456 Export Street",
+    "partyAddress2": "Floor 5",
+    "partyAddress3": "Export Zone",
+    "pinCode": "500001",
+    "country": "Canada",
+    "port": "Toronto",
+    "isActive": true,
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedAt": "2024-01-15T11:00:00.000Z"
+  }
+}
+```
+
+### 4.5 Delete Credit Party
+**DELETE** `/master-data/credit-parties/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Credit party deleted successfully"
+}
+```
+
+---
+
+## 5. Broker Master APIs
+
+### 5.1 Create Broker
+**POST** `/master-data/brokers`
+
+**Request Body:**
+```json
+{
+  "brokerName": "Global Brokers Ltd",
+  "customField1": "Custom Value 1"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Broker created successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d4",
+    "brokerName": "Global Brokers Ltd",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "customField1": "Custom Value 1"
+  }
+}
+```
+
+### 5.2 Get All Brokers
+**GET** `/master-data/brokers?page=1&limit=10&search=Global&isActive=true`
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
+- `search` (optional): Search in brokerName
+- `isActive` (optional): Filter by active status (true/false)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d4",
+      "brokerName": "Global Brokers Ltd",
+      "isActive": true,
+      "createdBy": {
+        "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+        "name": "John Doe",
+        "email": "john.doe@example.com"
+      },
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 1,
+    "totalItems": 1,
+    "itemsPerPage": 10
+  }
+}
+```
+
+### 5.3 Get Broker by ID
+**GET** `/master-data/brokers/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d4",
+    "brokerName": "Global Brokers Ltd",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### 5.4 Update Broker
+**PUT** `/master-data/brokers/:id`
+
+**Request Body:**
+```json
+{
+  "brokerName": "Global Brokers Ltd Updated",
+  "isActive": false
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Broker updated successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d4",
+    "brokerName": "Global Brokers Ltd Updated",
+    "isActive": false,
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedAt": "2024-01-15T11:00:00.000Z"
+  }
+}
+```
+
+### 5.5 Delete Broker
+**DELETE** `/master-data/brokers/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Broker deleted successfully"
+}
+```
+
+---
+
+## 6. CHA Master APIs
+
+### 6.1 Create CHA
+**POST** `/master-data/chas`
+
+**Request Body:**
+```json
+{
+  "chaName": "Customs House Agent Ltd",
+  "customField1": "Custom Value 1"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "CHA created successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d5",
+    "chaName": "Customs House Agent Ltd",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "customField1": "Custom Value 1"
+  }
+}
+```
+
+### 6.2 Get All CHAs
+**GET** `/master-data/chas?page=1&limit=10&search=Customs&isActive=true`
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
+- `search` (optional): Search in chaName
+- `isActive` (optional): Filter by active status (true/false)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d5",
+      "chaName": "Customs House Agent Ltd",
+      "isActive": true,
+      "createdBy": {
+        "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+        "name": "John Doe",
+        "email": "john.doe@example.com"
+      },
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 1,
+    "totalItems": 1,
+    "itemsPerPage": 10
+  }
+}
+```
+
+### 6.3 Get CHA by ID
+**GET** `/master-data/chas/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d5",
+    "chaName": "Customs House Agent Ltd",
+    "isActive": true,
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### 6.4 Update CHA
+**PUT** `/master-data/chas/:id`
+
+**Request Body:**
+```json
+{
+  "chaName": "Customs House Agent Ltd Updated",
+  "isActive": false
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "CHA updated successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d5",
+    "chaName": "Customs House Agent Ltd Updated",
+    "isActive": false,
+    "updatedBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "updatedAt": "2024-01-15T11:00:00.000Z"
+  }
+}
+```
+
+### 6.5 Delete CHA
+**DELETE** `/master-data/chas/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "CHA deleted successfully"
+}
+```
+
+---
+
+## 7. Error Responses
+
+### 7.1 Validation Error (400 Bad Request)
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    "Party name is required",
+    "Pin code must be exactly 6 digits",
+    "GST number format is invalid"
+  ]
+}
+```
+
+### 7.2 Duplicate Key Error (400 Bad Request)
+```json
+{
+  "success": false,
+  "message": "Party with this name already exists"
+}
+```
+
+### 7.3 Not Found Error (404 Not Found)
+```json
+{
+  "success": false,
+  "message": "Debit party not found"
+}
+```
+
+### 7.4 Unauthorized Error (401 Unauthorized)
+```json
+{
+  "success": false,
+  "message": "Access denied. No token provided"
+}
+```
+
+### 7.5 Internal Server Error (500 Internal Server Error)
+```json
+{
+  "success": false,
+  "message": "Internal server error"
+}
+```
+
+---
+
+## 8. Data Models
+
+### 8.1 Debit Party Schema
+```javascript
+{
+  partyName: String (required, unique),
+  partyAddress1: String (required),
+  partyAddress2: String (optional),
+  partyAddress3: String (optional),
+  pinCode: String (required, 6-digit validation),
+  gstNo: String (optional, GST format validation),
+  panNo: String (optional, PAN format validation),
+  iecNo: String (optional),
+  epcgLicNo: {
+    lic1: String,
+    lic2: String,
+    lic3: String
+  },
+  epcgLicDate: Date,
+  epcgLicExpiryReminder: Date,
+  isActive: Boolean (default: true),
+  createdBy: ObjectId (User reference),
+  updatedBy: ObjectId (User reference),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### 8.2 Item Schema
+```javascript
+{
+  itemName: String (required, unique),
+  itemHsn: String (required),
+  itemQty: Number (required),
+  itemUnits: String (required, enum: mtr, sqm, kg, pcs, ltr, box, carton, dozen, pair, set, unit),
+  itemRate: {
+    inr: Number,
+    usd: Number
+  },
+  remarks: String (optional),
+  isActive: Boolean (default: true),
+  createdBy: ObjectId (User reference),
+  updatedBy: ObjectId (User reference),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### 8.3 Credit Party Schema
+```javascript
+{
+  partyName: String (required, unique),
+  partyAddress1: String (required),
+  partyAddress2: String (optional),
+  partyAddress3: String (optional),
+  pinCode: String (required, 6-digit validation),
+  country: String (required),
+  port: String (required),
+  isActive: Boolean (default: true),
+  createdBy: ObjectId (User reference),
+  updatedBy: ObjectId (User reference),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### 8.4 Broker Schema
+```javascript
+{
+  brokerName: String (required, unique),
+  isActive: Boolean (default: true),
+  createdBy: ObjectId (User reference),
+  updatedBy: ObjectId (User reference),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### 8.5 CHA Schema
+```javascript
+{
+  chaName: String (required, unique),
+  isActive: Boolean (default: true),
+  createdBy: ObjectId (User reference),
+  updatedBy: ObjectId (User reference),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+---
+
+## 9. Features
+
+### 9.1 Flexible Schema Design
+- All models use `strict: false` to allow additional custom fields
+- Users can add their own schema keys without modifying the base models
+
+### 9.2 Comprehensive Validation
+- Mongoose validation for all required fields
+- Format validation for GST, PAN, PIN codes
+- Enum validation for status fields and units
+- Unique constraints where needed
+
+### 9.3 Search and Filtering
+- Full-text search across relevant fields
+- Pagination support with customizable page size
+- Active/inactive filtering
+- Date range filtering for transactions
+
+### 9.4 Audit Trail
+- All models track who created and updated records
+- Timestamps for creation and updates
+- User references for accountability
+
+### 9.5 Relationship Management
+- Proper references between models
+- Population of related data
+- Cascade considerations for deletions
+
+### 9.6 Error Handling
+- Comprehensive validation error handling
+- Duplicate key error handling
+- Proper HTTP status codes
+- User-friendly error messages
+
+---
+
+## 10. Usage Examples
+
+### 10.1 Complete API Flow Example
+
+1. **Register User:**
+```bash
+POST /auth/signup
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "securepassword123"
+}
+```
+
+2. **Login to Get Token:**
+```bash
+POST /auth/login
+{
+  "email": "john.doe@example.com",
+  "password": "securepassword123"
+}
+```
+
+3. **Create Debit Party (with token):**
+```bash
+POST /debit-parties
+Authorization: Bearer <token>
+{
+  "partyName": "ABC Trading Co",
+  "partyAddress1": "123 Main Street",
+  "pinCode": "400001"
+}
+```
+
+4. **Create Item (with token):**
+```bash
+POST /master-data/items
+Authorization: Bearer <token>
+{
+  "itemName": "Cotton Fabric",
+  "itemHsn": "5208",
+  "itemQty": 100,
+  "itemUnits": "sqm",
+  "itemRate": {
+    "inr": 150,
+    "usd": 2.5
+  }
+}
+```
+
+5. **Search and Filter:**
+```bash
+GET /debit-parties?search=ABC&page=1&limit=5&isActive=true
+Authorization: Bearer <token>
+```
+
+### 10.2 Custom Fields Example
+```json
+{
+  "partyName": "ABC Trading Co",
+  "partyAddress1": "123 Main Street",
+  "pinCode": "400001",
+  "customField1": "Custom Value 1",
+  "customField2": "Custom Value 2",
+  "businessType": "Wholesale",
+  "contactPerson": "John Smith",
+  "phoneNumber": "+91-9876543210"
+}
+```
+
+---
+
+## 11. Security Features
+
+- All endpoints require authentication (except auth endpoints)
+- JWT token validation with 7-day expiration
 - User-based access control
 - Input sanitization and validation
 - SQL injection prevention through Mongoose
+- CORS enabled for cross-origin requests
 
-## Performance Optimizations
+## 12. Performance Optimizations
+
 - Database indexes on frequently queried fields
 - Pagination to handle large datasets
 - Efficient population of related data
-- Optimized search queries
+- Optimized search queries with regex
+- Response caching considerations
 
-This comprehensive master data system provides a solid foundation for business management with flexibility for custom requirements and robust data integrity.
+---
+
+This comprehensive API documentation provides all the information needed to integrate with the Master Data Management System, including request/response formats, authentication, error handling, and usage examples.
