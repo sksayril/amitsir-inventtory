@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Testing Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 1px solid #e1e5e9;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .response.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .response.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .token-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status.authenticated {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.not-authenticated {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 API Testing Interface</h1>
+            <p>User Authentication & Company Master API</p>
+        </div>
+
+        <div class="content">
+            <!-- Authentication Status -->
+            <div class="section">
+                <h2>🔑 Authentication Status</h2>
+                <div id="authStatus" class="status not-authenticated">Not Authenticated</div>
+                <div id="tokenDisplay" class="token-display" style="display: none;"></div>
+            </div>
+
+            <!-- User Authentication -->
+            <div class="section">
+                <h2>👤 User Authentication</h2>
+                <div class="grid">
+                    <!-- Signup Form -->
+                    <div>
+                        <h3>Signup</h3>
+                        <form id="signupForm">
+                            <div class="form-group">
+                                <label for="signupName">Name:</label>
+                                <input type="text" id="signupName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signupEmail">Email:</label>
+                                <input type="email" id="signupEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signupPassword">Password:</label>
+                                <input type="password" id="signupPassword" required>
+                            </div>
+                            <button type="submit" class="btn">Signup</button>
+                        </form>
+                        <div id="signupResponse" class="response" style="display: none;"></div>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div>
+                        <h3>Login</h3>
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label for="loginEmail">Email:</label>
+                                <input type="email" id="loginEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password:</label>
+                                <input type="password" id="loginPassword" required>
+                            </div>
+                            <button type="submit" class="btn">Login</button>
+                        </form>
+                        <div id="loginResponse" class="response" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Profile -->
+            <div class="section">
+                <h2>👤 User Profile</h2>
+                <button id="getProfileBtn" class="btn">Get Profile</button>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                <div id="profileResponse" class="response" style="display: none;"></div>
+            </div>
+
+            <!-- Company Management -->
+            <div class="section">
+                <h2>🏢 Company Master</h2>
+                <div class="grid">
+                    <!-- Create Company -->
+                    <div>
+                        <h3>Create Company</h3>
+                        <form id="createCompanyForm">
+                            <div class="form-group">
+                                <label for="firmId">FIRM ID:</label>
+                                <input type="text" id="firmId" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="companyName">Company Name:</label>
+                                <input type="text" id="companyName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="firmAddress1">Address 1:</label>
+                                <input type="text" id="firmAddress1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="firmAddress2">Address 2:</label>
+                                <input type="text" id="firmAddress2">
+                            </div>
+                            <div class="form-group">
+                                <label for="firmAddress3">Address 3:</label>
+                                <input type="text" id="firmAddress3">
+                            </div>
+                            <div class="form-group">
+                                <label for="pinCode">PIN Code:</label>
+                                <input type="text" id="pinCode" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="gstNo">GST Number:</label>
+                                <input type="text" id="gstNo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="panNo">PAN Number:</label>
+                                <input type="text" id="panNo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="contactNo">Contact Number:</label>
+                                <input type="text" id="contactNo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="emailId">Email ID:</label>
+                                <input type="email" id="emailId" required>
+                            </div>
+                            <button type="submit" class="btn">Create Company</button>
+                        </form>
+                        <div id="createCompanyResponse" class="response" style="display: none;"></div>
+                    </div>
+
+                    <!-- Company Operations -->
+                    <div>
+                        <h3>Company Operations</h3>
+                        <button id="getCompaniesBtn" class="btn">Get All Companies</button>
+                        <button id="searchByFirmIdBtn" class="btn btn-secondary">Search by FIRM ID</button>
+                        <button id="searchByGstBtn" class="btn btn-secondary">Search by GST</button>
+                        
+                        <div style="margin-top: 15px;">
+                            <label for="companyId">Company ID (for Update/Delete):</label>
+                            <input type="text" id="companyId" placeholder="Enter company ID">
+                        </div>
+                        
+                        <button id="getCompanyByIdBtn" class="btn">Get by ID</button>
+                        <button id="updateCompanyBtn" class="btn btn-secondary">Update Company</button>
+                        <button id="deleteCompanyBtn" class="btn btn-danger">Delete Company</button>
+                        
+                        <div id="companyResponse" class="response" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+
+        // Update authentication status
+        function updateAuthStatus() {
+            const authStatus = document.getElementById('authStatus');
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            
+            if (authToken) {
+                authStatus.textContent = 'Authenticated';
+                authStatus.className = 'status authenticated';
+                tokenDisplay.style.display = 'block';
+                tokenDisplay.textContent = `Token: ${authToken.substring(0, 50)}...`;
+            } else {
+                authStatus.textContent = 'Not Authenticated';
+                authStatus.className = 'status not-authenticated';
+                tokenDisplay.style.display = 'none';
+            }
+        }
+
+        // Show response
+        function showResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `response ${isError ? 'error' : 'success'}`;
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // API call helper
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'API call failed');
+                }
+                
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Signup
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const formData = {
+                    name: document.getElementById('signupName').value,
+                    email: document.getElementById('signupEmail').value,
+                    password: document.getElementById('signupPassword').value
+                };
+                
+                const response = await apiCall('/auth/signup', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                showResponse('signupResponse', response);
+                if (response.data && response.data.token) {
+                    authToken = response.data.token;
+                    localStorage.setItem('authToken', authToken);
+                    updateAuthStatus();
+                }
+            } catch (error) {
+                showResponse('signupResponse', { error: error.message }, true);
+            }
+        });
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const formData = {
+                    email: document.getElementById('loginEmail').value,
+                    password: document.getElementById('loginPassword').value
+                };
+                
+                const response = await apiCall('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                showResponse('loginResponse', response);
+                if (response.data && response.data.token) {
+                    authToken = response.data.token;
+                    localStorage.setItem('authToken', authToken);
+                    updateAuthStatus();
+                }
+            } catch (error) {
+                showResponse('loginResponse', { error: error.message }, true);
+            }
+        });
+
+        // Get Profile
+        document.getElementById('getProfileBtn').addEventListener('click', async () => {
+            try {
+                const response = await apiCall('/auth/me');
+                showResponse('profileResponse', response);
+            } catch (error) {
+                showResponse('profileResponse', { error: error.message }, true);
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            authToken = null;
+            localStorage.removeItem('authToken');
+            updateAuthStatus();
+            showResponse('profileResponse', { message: 'Logged out successfully' });
+        });
+
+        // Create Company
+        document.getElementById('createCompanyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const formData = {
+                    firmId: document.getElementById('firmId').value,
+                    companyName: document.getElementById('companyName').value,
+                    firmAddress1: document.getElementById('firmAddress1').value,
+                    firmAddress2: document.getElementById('firmAddress2').value,
+                    firmAddress3: document.getElementById('firmAddress3').value,
+                    pinCode: document.getElementById('pinCode').value,
+                    gstNo: document.getElementById('gstNo').value,
+                    panNo: document.getElementById('panNo').value,
+                    contactNo: document.getElementById('contactNo').value,
+                    emailId: document.getElementById('emailId').value
+                };
+                
+                const response = await apiCall('/companies', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                showResponse('createCompanyResponse', response);
+            } catch (error) {
+                showResponse('createCompanyResponse', { error: error.message }, true);
+            }
+        });
+
+        // Get All Companies
+        document.getElementById('getCompaniesBtn').addEventListener('click', async () => {
+            try {
+                const response = await apiCall('/companies');
+                showResponse('companyResponse', response);
+            } catch (error) {
+                showResponse('companyResponse', { error: error.message }, true);
+            }
+        });
+
+        // Search by FIRM ID
+        document.getElementById('searchByFirmIdBtn').addEventListener('click', async () => {
+            const firmId = prompt('Enter FIRM ID to search:');
+            if (firmId) {
+                try {
+                    const response = await apiCall(`/companies/search/firm-id/${firmId}`);
+                    showResponse('companyResponse', response);
+                } catch (error) {
+                    showResponse('companyResponse', { error: error.message }, true);
+                }
+            }
+        });
+
+        // Search by GST
+        document.getElementById('searchByGstBtn').addEventListener('click', async () => {
+            const gstNo = prompt('Enter GST Number to search:');
+            if (gstNo) {
+                try {
+                    const response = await apiCall(`/companies/search/gst/${gstNo}`);
+                    showResponse('companyResponse', response);
+                } catch (error) {
+                    showResponse('companyResponse', { error: error.message }, true);
+                }
+            }
+        });
+
+        // Get Company by ID
+        document.getElementById('getCompanyByIdBtn').addEventListener('click', async () => {
+            const companyId = document.getElementById('companyId').value;
+            if (companyId) {
+                try {
+                    const response = await apiCall(`/companies/${companyId}`);
+                    showResponse('companyResponse', response);
+                } catch (error) {
+                    showResponse('companyResponse', { error: error.message }, true);
+                }
+            } else {
+                alert('Please enter a Company ID');
+            }
+        });
+
+        // Update Company
+        document.getElementById('updateCompanyBtn').addEventListener('click', async () => {
+            const companyId = document.getElementById('companyId').value;
+            if (companyId) {
+                const updates = prompt('Enter JSON updates (e.g., {"companyName": "New Name"}):');
+                if (updates) {
+                    try {
+                        const updateData = JSON.parse(updates);
+                        const response = await apiCall(`/companies/${companyId}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(updateData)
+                        });
+                        showResponse('companyResponse', response);
+                    } catch (error) {
+                        showResponse('companyResponse', { error: error.message }, true);
+                    }
+                }
+            } else {
+                alert('Please enter a Company ID');
+            }
+        });
+
+        // Delete Company
+        document.getElementById('deleteCompanyBtn').addEventListener('click', async () => {
+            const companyId = document.getElementById('companyId').value;
+            if (companyId) {
+                if (confirm('Are you sure you want to delete this company?')) {
+                    try {
+                        const response = await apiCall(`/companies/${companyId}`, {
+                            method: 'DELETE'
+                        });
+                        showResponse('companyResponse', response);
+                    } catch (error) {
+                        showResponse('companyResponse', { error: error.message }, true);
+                    }
+                }
+            } else {
+                alert('Please enter a Company ID');
+            }
+        });
+
+        // Initialize
+        updateAuthStatus();
+    </script>
+</body>
+</html>
