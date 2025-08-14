@@ -13,6 +13,8 @@ const authRouter = require('./routes/auth');
 const companiesRouter = require('./routes/companies');
 const debitPartiesRouter = require('./routes/debitParties');
 const masterDataRouter = require('./routes/masterData');
+const salesTransactionsRouter = require('./routes/salesTransactions');
+const receiptTransactionsRouter = require('./routes/receiptTransactions');
 
 const app = express();
 
@@ -34,6 +36,8 @@ app.use('/users', usersRouter);
 app.use('/companies', companiesRouter);
 app.use('/debit-parties', debitPartiesRouter);
 app.use('/master-data', masterDataRouter);
+app.use('/sales-transactions', salesTransactionsRouter);
+app.use('/receipt-transactions', receiptTransactionsRouter);
 
 // 404 handler
 app.use((req, res, next) => {

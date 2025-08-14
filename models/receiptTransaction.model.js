@@ -1,70 +1,75 @@
 const mongoose = require('mongoose');
 
 const receiptTransactionSchema = new mongoose.Schema({
-  transactionNumber: {
+  receiptNumber: {
     type: String,
-    required: [true, 'Transaction Number is required'],
+    required: [true, 'Receipt Number is required'],
     unique: true,
     trim: true,
-    maxlength: [50, 'Transaction Number cannot exceed 50 characters']
+    maxlength: [50, 'Receipt Number cannot exceed 50 characters']
   },
-  transactionDate: {
+  receiptDate: {
     type: Date,
-    required: [true, 'Transaction Date is required'],
+    required: [true, 'Receipt Date is required'],
     default: Date.now
   },
-  party: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'DebitParty', // Can be either debit or credit party
-    required: [true, 'Party is required']
+  creditParty: {
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CreditParty',
+      required: [true, 'Credit Party is required']
+    },
+    partyName: {
+      type: String,
+      required: [true, 'Credit Party Name is required']
+    },
+    country: {
+      type: String,
+      required: [true, 'Country is required']
+    },
+    port: {
+      type: String,
+      required: [true, 'Port is required']
+    }
   },
-  partyType: {
+  billNumber: {
     type: String,
-    enum: ['debit', 'credit'],
-    required: [true, 'Party Type is required']
+    required: [true, 'Bill Number is required'],
+    trim: true,
+    maxlength: [50, 'Bill Number cannot exceed 50 characters']
   },
-  amount: {
+  billAmount: {
     type: Number,
-    required: [true, 'Amount is required'],
-    min: [0, 'Amount cannot be negative']
+    required: [true, 'Bill Amount is required'],
+    min: [0, 'Bill Amount cannot be negative']
+  },
+  receiptAmount: {
+    type: Number,
+    required: [true, 'Receipt Amount is required'],
+    min: [0, 'Receipt Amount cannot be negative']
+  },
+  inrAmount: {
+    type: Number,
+    required: [true, 'INR Amount is required'],
+    min: [0, 'INR Amount cannot be negative']
   },
   currency: {
     type: String,
     enum: ['INR', 'USD', 'EUR', 'GBP'],
     default: 'INR'
   },
-  paymentMode: {
-    type: String,
-    enum: ['cash', 'cheque', 'bank_transfer', 'online', 'card'],
-    required: [true, 'Payment Mode is required']
+  exchangeRate: {
+    type: Number,
+    min: [0, 'Exchange Rate cannot be negative'],
+    default: 1
   },
-  referenceNumber: {
+  utrNumber: {
     type: String,
+    required: [true, 'UTR Number is required'],
     trim: true,
-    maxlength: [50, 'Reference Number cannot exceed 50 characters']
+    maxlength: [100, 'UTR Number cannot exceed 100 characters']
   },
-  bankDetails: {
-    bankName: {
-      type: String,
-      trim: true,
-      maxlength: [100, 'Bank Name cannot exceed 100 characters']
-    },
-    accountNumber: {
-      type: String,
-      trim: true,
-      maxlength: [50, 'Account Number cannot exceed 50 characters']
-    },
-    ifscCode: {
-      type: String,
-      trim: true,
-      maxlength: [20, 'IFSC Code cannot exceed 20 characters']
-    }
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'completed', 'failed', 'cancelled'],
-    default: 'pending'
-  },
+  // Note: salesTransaction field removed since bill validation is disabled
   remarks: {
     type: String,
     trim: true,
@@ -89,31 +94,49 @@ const receiptTransactionSchema = new mongoose.Schema({
 });
 
 // Index for better query performance
-receiptTransactionSchema.index({ transactionNumber: 1 });
-receiptTransactionSchema.index({ transactionDate: 1 });
-receiptTransactionSchema.index({ party: 1 });
-receiptTransactionSchema.index({ partyType: 1 });
-receiptTransactionSchema.index({ status: 1 });
+receiptTransactionSchema.index({ receiptNumber: 1 });
+receiptTransactionSchema.index({ receiptDate: 1 });
+receiptTransactionSchema.index({ billNumber: 1 });
+receiptTransactionSchema.index({ 'creditParty._id': 1 });
+// Note: salesTransaction index removed since bill validation is disabled
+receiptTransactionSchema.index({ utrNumber: 1 });
 receiptTransactionSchema.index({ createdBy: 1 });
 
-// Static method to find by Transaction Number
-receiptTransactionSchema.statics.findByTransactionNumber = function(transactionNumber) {
-  return this.findOne({ transactionNumber: transactionNumber });
+// Static method to find by Receipt Number
+receiptTransactionSchema.statics.findByReceiptNumber = function(receiptNumber) {
+  return this.findOne({ receiptNumber: receiptNumber });
+};
+
+// Static method to find by Bill Number
+receiptTransactionSchema.statics.findByBillNumber = function(billNumber) {
+  return this.find({ billNumber: billNumber });
 };
 
 // Static method to find by Date Range
 receiptTransactionSchema.statics.findByDateRange = function(startDate, endDate) {
   return this.find({
-    transactionDate: {
+    receiptDate: {
       $gte: startDate,
       $lte: endDate
     }
   });
 };
 
-// Static method to find by Party
-receiptTransactionSchema.statics.findByParty = function(partyId) {
-  return this.find({ party: partyId });
+// Static method to find by Credit Party
+receiptTransactionSchema.statics.findByCreditParty = function(creditPartyId) {
+  return this.find({ 'creditParty._id': creditPartyId });
+};
+
+// Static method to find pending bills
+receiptTransactionSchema.statics.findPendingBills = function() {
+  return this.aggregate([
+    {
+      $group: {
+        _id: '$billNumber',
+        totalReceived: { $sum: '$inrAmount' }
+      }
+    }
+  ]);
 };
 
 // Instance method to get transaction info

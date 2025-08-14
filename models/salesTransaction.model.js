@@ -13,15 +13,62 @@ const salesTransactionSchema = new mongoose.Schema({
     required: [true, 'Transaction Date is required'],
     default: Date.now
   },
+  company: {
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: [true, 'Company is required']
+    },
+    companyName: {
+      type: String,
+      required: [true, 'Company Name is required']
+    },
+    firmId: {
+      type: String,
+      required: [true, 'Firm ID is required']
+    },
+    gstNo: {
+      type: String,
+      required: [true, 'GST Number is required']
+    }
+  },
   debitParty: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'DebitParty',
-    required: [true, 'Debit Party is required']
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'DebitParty',
+      required: [true, 'Debit Party is required']
+    },
+    partyName: {
+      type: String,
+      required: [true, 'Debit Party Name is required']
+    },
+    gstNo: String,
+    panNo: String,
+    iecNo: String,
+    epcgLicNo: {
+      lic1: String,
+      lic2: String,
+      lic3: String
+    }
   },
   creditParty: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'CreditParty',
-    required: [true, 'Credit Party is required']
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CreditParty',
+      required: [true, 'Credit Party is required']
+    },
+    partyName: {
+      type: String,
+      required: [true, 'Credit Party Name is required']
+    },
+    country: {
+      type: String,
+      required: [true, 'Country is required']
+    },
+    port: {
+      type: String,
+      required: [true, 'Port is required']
+    }
   },
   items: [{
     item: {
@@ -43,6 +90,11 @@ const salesTransactionSchema = new mongoose.Schema({
       type: Number,
       required: [true, 'Amount is required'],
       min: [0, 'Amount cannot be negative']
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Description cannot exceed 500 characters']
     }
   }],
   totalAmount: {
@@ -72,6 +124,11 @@ const salesTransactionSchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxlength: [500, 'Remarks cannot exceed 500 characters']
+  },
+  coveringNotes: {
+    type: String,
+    trim: true,
+    maxlength: [2000, 'Covering notes cannot exceed 2000 characters']
   },
   isActive: {
     type: Boolean,
